@@ -11,6 +11,15 @@ services:
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
       # Mount source-code for development
       - ./:/app
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: moro
+      MYSQL_USER: app
+      MYSQL_PASSWORD_FILE: /run/secrets/app_db_password
+    secrets:
+      - app_db_password
+    networks:
+      - moro-network
 
   backend:
     build: backend
@@ -21,14 +30,32 @@ services:
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
       # Mount source-code for development
       - ./:/app
+    environment:
+      MYSQL_HOST: mysql    
+      MYSQL_DATABASE: moro
+      MYSQL_USER: app
+      MYSQL_PASSWORD_FILE: /run/secrets/app_db_password
+    secrets:
+      - app_db_password
+    networks:
+      - moro-network
 
   mysql:
     image: mysql:5.7
-    environment:
-      - MYSQL_ROOT_PASSWORD=verysecret
-      - MYSQL_DATABASE=yii2advanced
-      - MYSQL_USER=yii2advanced
-      - MYSQL_PASSWORD=secret
+    environment:      
+      MYSQL_ROOT_PASSWORD: verysecret
+      MYSQL_DATABASE: moro
+      MYSQL_USER: app
+      MYSQL_PASSWORD: secret
+      # MYSQL_PASSWORD_FILE: /run/secrets/app_db_password
+    volumes:
+      - mysql:/var/lib/mysql
+    secrets:
+      - app_db_password
+    networks:
+      - moro-network
+    ports:
+      - "33065:3306"
 
   #pgsql:
   #  image: postgres:9.5
@@ -36,3 +63,14 @@ services:
   #    - POSTGRES_DB=yii2advanced
   #    - POSTGRES_USER=yii2advanced
   #    - POSTGRES_PASSWORD=secret
+
+volumes:
+  mysql:
+
+secrets:
+ app_db_password:
+    file: ./secrets/development/app_db_password
+
+networks:
+  moro-network:
+    name: moro-network
