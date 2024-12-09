@@ -30,6 +30,8 @@ class m241209_094909_create_auth_users_table extends Migration
         ]);
 
         $this->addPrimaryKey('auth_users_pkey', '{{%auth_users}}', 'id');
+        
+        $this->dropTable('{{%user}}');
     }
 
     /**
@@ -37,6 +39,8 @@ class m241209_094909_create_auth_users_table extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('{{%auth_users}}');
+        echo "m241209_094909_create_auth_users_table cannot be reverted.\n";
+
+        return false;
     }
 }
