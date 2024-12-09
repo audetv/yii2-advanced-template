@@ -1,9 +1,8 @@
-version: '3.2'
-
 services:
-
-  frontend:
-    build: frontend
+  frontend:    
+    build:
+      context: frontend/docker
+      dockerfile: development/nginx/Dockerfile
     ports:
       - 20080:80
     volumes:
@@ -12,14 +11,26 @@ services:
       # Mount source-code for development
       - ./:/app
     environment:
-      MYSQL_HOST: mysql
-      MYSQL_DATABASE: moro
-      MYSQL_USER: app
-      MYSQL_PASSWORD_FILE: /run/secrets/app_db_password
+      APP_ENV: dev      
+      APP_DEBUG: 0
+      DB_DSN_PREFIX: pgsql
+      DB_HOST: postgres    
+      DB_NAME: app
+      DB_USER: app
+      DB_PASSWORD_FILE: /run/secrets/app_db_password
+      COOKIE_DOMAIN: localhost
+      FRONTEND_URL: http://localhost:20080
+      STATIC_URL: http://static.localhost
+      MAILER_FROM_EMAIL: mail@localhost
+      MAILER_FROM_NAME: application
+      MAILER_HOST: mailer
+      MAILER_PORT: 1025
+      MAILER_USERNAME: app
+      MAILER_PASSWORD_FILE: /run/secrets/app_mailer_password
+      MAILER_ENCRYPTION: tls
     secrets:
       - app_db_password
-    networks:
-      - moro-network
+      - app_mailer_password
 
   backend:
     build: backend
@@ -31,46 +42,55 @@ services:
       # Mount source-code for development
       - ./:/app
     environment:
-      MYSQL_HOST: mysql    
-      MYSQL_DATABASE: moro
-      MYSQL_USER: app
-      MYSQL_PASSWORD_FILE: /run/secrets/app_db_password
+      DB_DSN_PREFIX: pgsql
+      DB_HOST: postgres    
+      DB_NAME: app
+      DB_USER: app
+      DB_PASSWORD_FILE: /run/secrets/app_db_password
     secrets:
       - app_db_password
-    networks:
-      - moro-network
 
-  mysql:
-    image: mysql:5.7
-    environment:      
-      MYSQL_ROOT_PASSWORD: verysecret
-      MYSQL_DATABASE: moro
-      MYSQL_USER: app
-      MYSQL_PASSWORD: secret
-      # MYSQL_PASSWORD_FILE: /run/secrets/app_db_password
+  # mysql:
+  #   image: mysql:5.7
+  #   environment:      
+  #     MYSQL_ROOT_PASSWORD: verysecret
+  #     MYSQL_DATABASE: app
+  #     MYSQL_USER: app
+  #     MYSQL_PASSWORD: secret
+  #     # MYSQL_PASSWORD_FILE: /run/secrets/app_db_password
+  #   volumes:
+  #     - mysql:/var/lib/mysql
+  #   secrets:
+  #     - app_db_password
+  #   ports:
+  #     - "33065:3306"
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      APP_ENV: dev
+      DB_USER: app
+      DB_NAME: app
+      DB_PASSWORD_FILE: /run/secrets/app_db_password
+    secrets:
+      - app_db_password
     volumes:
-      - mysql:/var/lib/mysql
-    secrets:
-      - app_db_password
-    networks:
-      - moro-network
+      - postgres:/var/lib/postgresql/data
     ports:
-      - "33065:3306"
+      - "54321:5432"
 
-  #pgsql:
-  #  image: postgres:9.5
-  #  environment:
-  #    - POSTGRES_DB=yii2advanced
-  #    - POSTGRES_USER=yii2advanced
-  #    - POSTGRES_PASSWORD=secret
+  mailer:
+    image: mailhog/mailhog
+    ports:
+      - 1025:8025
+
 
 volumes:
-  mysql:
+  postgres:
+  # mysql:
 
 secrets:
- app_db_password:
+  app_db_password:
     file: ./secrets/development/app_db_password
-
-networks:
-  moro-network:
-    name: moro-network
+  app_mailer_password:
+    file: ./secrets/development/app_mailer_password
