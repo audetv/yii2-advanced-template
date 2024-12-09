@@ -14,6 +14,7 @@ return [
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-frontend',
+            'cookieValidationKey' => $params['cookieValidationKey'],
         ],
         'user' => [
             'identityClass' => common\auth\Identity::class,
@@ -22,8 +23,11 @@ return [
             'loginUrl' => ['auth/auth/login'],
         ],
         'session' => [
-            // this is the name of the session cookie used for login on the frontend
-            'name' => 'advanced-frontend',
+            'name' => '_session',
+            'cookieParams' => [
+                'domain' => $params['cookieDomain'],
+                'httpOnly' => true,
+            ],
         ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
@@ -38,6 +42,7 @@ return [
             'errorAction' => 'site/error',
         ],
         'frontendUrlManager' => require __DIR__ . '/urlManager.php',
+        'backendUrlManager' =>  require __DIR__ . '/../../backend/config/urlManager.php',
         'urlManager' => function () {
             return Yii::$app->get('frontendUrlManager');
         },

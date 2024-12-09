@@ -13,6 +13,7 @@ return [
     'user.rememberMeDuration' => 3600 * 24 * 30,
     'cookieDomain' => getenv('COOKIE_DOMAIN'),
     'frontendHostInfo' => getenv('FRONTEND_URL'),
+    'backendHostInfo' => getenv('BACKEND_URL'),
     'staticHostInfo' => getenv('STATIC_URL'),
 
     'auth' => [

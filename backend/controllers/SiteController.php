@@ -2,7 +2,11 @@
 
 namespace backend\controllers;
 
-use common\models\LoginForm;
+use App\Auth\Command\Login\Command;
+use App\Auth\Command\Login\Handler;
+use App\Auth\Form\Login\LoginForm;
+use common\auth\Identity;
+use Exception;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
@@ -14,6 +18,14 @@ use yii\web\Response;
  */
 class SiteController extends Controller
 {
+    private Handler $handler;
+
+    public function __construct($id, $controller, Handler $handler, $config = [])
+    {
+        parent::__construct($id, $controller, $config);
+        $this->handler = $handler;
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -51,6 +63,7 @@ class SiteController extends Controller
         return [
             'error' => [
                 'class' => \yii\web\ErrorAction::class,
+                'layout' => 'blank',
             ],
         ];
     }
@@ -78,15 +91,27 @@ class SiteController extends Controller
 
         $this->layout = 'blank';
 
-        $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            return $this->goBack();
+        $form = new LoginForm();
+        if ($form->load(Yii::$app->request->post()) && $form->validate()) {
+            try {
+                $command = new Command();
+                $command->email = $form->email ?? '';
+                $command->password = $form->password ?? '';
+                $user = $this->handler->auth($command);
+
+                Yii::$app
+                    ->user
+                    ->login(new Identity($user), $form->rememberMe ? Yii::$app->params['user.rememberMeDuration'] : 0);
+
+                return $this->goBack();
+            } catch (Exception $e) {
+                Yii::$app->errorHandler->logException($e);
+                Yii::$app->session->setFlash('error', $e->getMessage());
+            }
         }
 
-        $model->password = '';
-
         return $this->render('login', [
-            'model' => $model,
+            'model' => $form,
         ]);
     }
 
