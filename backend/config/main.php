@@ -57,7 +57,7 @@ return [
         'rules' => [
             [
                 'allow' => true,
-                'roles' => ['user', 'admin'],
+                'roles' => ['admin'],
             ],
         ],
     ],
