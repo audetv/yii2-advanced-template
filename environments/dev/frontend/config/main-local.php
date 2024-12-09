@@ -3,6 +3,10 @@
 $config = [  
 ];
 
+if (getenv('FRONTEND_NAME')) {
+    $config['name'] = getenv('FRONTEND_NAME');
+}
+
 if (!YII_ENV_TEST) {
     // configuration adjustments for 'dev' environment
     $config['bootstrap'][] = 'debug';
